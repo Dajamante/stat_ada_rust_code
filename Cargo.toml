@@ -7,4 +7,9 @@ edition = "2021"
 
 [dependencies]
 anyhow = "1.0.69"
+env_logger = "0.10.0"
+log = "0.4.17"
 regex = "1.7.1"
+
+[env]
+RUST_LOG="info"
