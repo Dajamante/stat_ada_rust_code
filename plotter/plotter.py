@@ -87,48 +87,55 @@ lib_rs = {
     # "Total": 985,
 }
 
-df = pd.DataFrame.from_dict(crates_io, orient="index", columns=["Value"])
-df.reset_index(inplace=True)
+datasets = [lib_rs, crates_io, rustc]
 
-df.rename(columns={"index": "Category"}, inplace=True)
-total = df["Value"].sum()
-df["Percent"] = 100 * df["Value"] / total
+for d in datasets:
+    # Get the name of the current dictionary object
+    dict_name = next(key for key, value in locals().items() if value is d)
+    df = pd.DataFrame.from_dict(d, orient="index", columns=["Value"])
+    df.reset_index(inplace=True)
 
-# Sort the data frame by percent in descending order
-df = df.sort_values(by="Percent", ascending=False)
+    df.rename(columns={"index": "Category"}, inplace=True)
+    total = df["Value"].sum()
+    df["Percent"] = 100 * df["Value"] / total
 
-df["Y"] = [1] * len(df)
-list_x = list(range(0, len(df)))
-df["X"] = list_x
-print(df)
+    # Sort the data frame by percent in descending order
+    df = df.sort_values(by="Percent", ascending=False)
 
-label = [
-    i + "<br>" + str(j) + "<br>" + "{:.2f}%".format(k)
-    for i, j, k in zip(df.Category, df.Value, df.Percent)
-]
+    df["Y"] = [1] * len(df)
+    list_x = list(range(0, len(df)))
+    df["X"] = list_x
+    print(df)
 
-pal_ = list(sns.color_palette(palette="plasma_r", n_colors=len(df.Category)).as_hex())
-fig = px.bar(
-    df,
-    x="X",
-    y="Y",
-    color="Category",
-    color_discrete_sequence=pal_,
-    size="Value",
-    text=label,
-    size_max=180,
-)
-fig.update_layout(
-    width=1600, height=600, margin=dict(t=50, l=0, r=0, b=0), showlegend=False
-)
+    label = [
+        i + "<br>" + str(j) + "<br>" + "{:.2f}%".format(k)
+        for i, j, k in zip(df.Category, df.Value, df.Percent)
+    ]
 
-fig.update_traces(
-    textposition="top center",
-    textfont=dict(size=14, color="#333333"),
-)
-fig.update_xaxes(showgrid=False, zeroline=False, visible=False)
-fig.update_yaxes(showgrid=False, zeroline=False, visible=False)
-fig.update_layout({"plot_bgcolor": "white", "paper_bgcolor": "white"})
-fig.write_image("cratesio.png", format="png")
-# plt.savefig("librs.png", dpi=300, bbox_inches="tight")
-fig.show()
+    pal_ = list(
+        sns.color_palette(palette="plasma_r", n_colors=len(df.Category)).as_hex()
+    )
+    fig = px.scatter(
+        df,
+        x="X",
+        y="Y",
+        color="Category",
+        color_discrete_sequence=pal_,
+        size="Value",
+        text=label,
+        size_max=180,
+    )
+    fig.update_layout(
+        width=1600, height=600, margin=dict(t=50, l=0, r=0, b=0), showlegend=False
+    )
+
+    fig.update_traces(
+        textposition="top center",
+        textfont=dict(size=14, color="#333333"),
+    )
+    fig.update_xaxes(showgrid=False, zeroline=False, visible=False)
+    fig.update_yaxes(showgrid=False, zeroline=False, visible=False)
+    fig.update_layout({"plot_bgcolor": "white", "paper_bgcolor": "white"})
+    fig.write_image(f"{dict_name}.png", format="png")
+    # plt.savefig("librs.png", dpi=300, bbox_inches="tight")
+    fig.show()
