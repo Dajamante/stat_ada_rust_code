@@ -24,12 +24,16 @@ pub fn rust_regexes() -> Vec<Regex> {
 }
 
 pub fn spark_regexes() -> Vec<Regex> {
-    let number_regex = Regex::new(r#"\b\d+\b"#).unwrap();
-    let struct_regex = Regex::new("record").unwrap();
+    //let number_regex = Regex::new(r#"\b\d+\b"#).unwrap();
+    let number_regex =
+        Regex::new(r#"Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d"#)
+            .unwrap();
+    let struct_regex = Regex::new("is record").unwrap();
     let enum_regex = Regex::new(r#"type\s{1}[a-zA-Z_]+\s{1}is\s{1}\("#).unwrap();
-    let array_regex = Regex::new("is array").unwrap();
+    let array_regex = Regex::new(r#"type [a-zA-Z_]+ is array\(\d.."#).unwrap();
     // new is used for memory allocation but access is sufficient
-    let ref_regex = Regex::new(r"\b(access)\s+(\w+)\b").unwrap();
+    let ref_regex = Regex::new(r"access|new").unwrap();
+    let unconstrained_regex = Regex::new(r#"range <>|Containers.Vector"#).unwrap();
     // Counts of the unsafe keyword can be useful later.
     //let unsafe_regex: Regex = Regex::new(r"unsafe \{").unwrap();
     vec![
@@ -38,5 +42,6 @@ pub fn spark_regexes() -> Vec<Regex> {
         enum_regex,
         array_regex,
         ref_regex,
+        unconstrained_regex,
     ]
 }

@@ -161,18 +161,22 @@ fn count_in_file(
 
 fn create_key(regex: &Regex) -> String {
     let key = match regex.as_str() {
-        "\\[.*;.*\\]" | "is array" => "Array".to_string(),
+        "\\[.*;.*\\]" | r#"type [a-zA-Z_]+ is array\(\d.."# => "Array".to_string(),
         "Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>" => "Box/Rc/Arc".to_string(),
         "&[mut\\s]*\\w+" | r"type\s{1}[a-zA-Z_]+\s{1}is\s{1}array" => "&T or &mut T".to_string(),
         "String::|.to_string|format!\\(" => "String".to_string(),
         "(vec!\\[\\])|(Vec<)|Vec::n" => "Vec".to_string(),
-        "\\b\\d+\\b" => "Number".to_string(),
+        "\\b\\d+\\b"
+        | r#"Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d"# => {
+            "Number".to_string()
+        }
         "struct" => "Struct".to_string(),
         "enum" | r"type\s{1}[a-zA-Z_]+\s{1}is\s{1}\(" => "Enum".to_string(),
-        "record" => "Record".to_string(),
-        r"\b(access)\s+(\w+)\b" => "Access".to_string(),
+        "is record" => "Record".to_string(),
+        r"access|new" => "Access".to_string(),
+        r#"range <>|Containers.Vector"# => "Unconstrained array".to_string(),
         // this is a kind of error I guess
-        _ => String::from("Not a valid regex"),
+        els => format!("Not a valid regex {els}"),
     };
     key
 }
