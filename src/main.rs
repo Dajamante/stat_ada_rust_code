@@ -1,4 +1,26 @@
+///! This program reads through a directory and its
+/// subdirectories, looking for certain patterns using
+/// regular expressions.
+/// Specifically, it counts the occurrences of different
+/// patterns such as numbers, arrays, references, strings,
+/// and various heap-allocated types.
+///
+/// The program creates a list of regular expressions to use
+/// for pattern matching, then loops through each subdirector
+///  in the specified directory, processing each file in the
+/// directory and its subdirectories.
+///
+/// For each file, it counts the occurrences of each pattern
+/// using the specified regular expressions, then adds the counts
+///  to a hashmap. The program also tracks the total number of
+///  lines and files processed.
+///
+/// Once all files have been processed, the program adds up the counts
+///  from all hashmaps and creates a final hashmap with the total
+///  counts for each pattern. Finally, the program prints out the final
+/// hashmap to the console.
 use anyhow::Result;
+use clap::{arg, command, Parser};
 use log::info;
 use regex::Regex;
 use std::collections::HashMap;
@@ -7,32 +29,30 @@ use std::io::BufRead;
 use std::io::BufReader;
 use std::path::{Path, PathBuf};
 
+mod regexes_mod;
+use crate::regexes_mod::*;
+/// Simple program to greet a person
+#[derive(Parser, Debug)]
+#[command(author, version, about, long_about = None)]
+struct Args {
+    /// Name of the person to greet
+    #[arg(short = 'c', long)]
+    code_base: String,
+}
+
 fn main() -> Result<()> {
     env_logger::init();
     info!("Starting application");
 
-    let number_regex = Regex::new(r#"\b\d+\b"#).unwrap();
-    let struct_regex = Regex::new(r"struct").unwrap();
-    let enum_regex = Regex::new(r"enum").unwrap();
-    let array_regex = Regex::new(r"\[.*;.*\]").unwrap();
-    let ref_regex = Regex::new(r"&[mut\s]*\w+").unwrap();
-    let heap_regex: Regex = Regex::new(r"Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>").unwrap();
-    //let unsafe_regex: Regex = Regex::new(r"unsafe \{").unwrap();
+    let args = Args::parse();
+    let code_base = args.code_base;
 
-    let dyn_vec_regex = Regex::new(r"(vec!\[\])|(Vec<)|Vec::n").unwrap();
-    let string_regex = Regex::new(r"String::|.to_string|format!\(").unwrap();
-    let regexes = vec![
-        number_regex,
-        struct_regex,
-        enum_regex,
-        array_regex,
-        dyn_vec_regex,
-        string_regex,
-        heap_regex,
-        ref_regex,
-    ];
-
-    let path = Path::new("../famous_crates");
+    let (path, regexes): (&Path, Vec<Regex>) = match &code_base {
+        p if p == "rust" => (Path::new("../famous_crates/rust"), rust_regexes()),
+        p if p == "spark" => (Path::new("../famous_crates/ada"), spark_regexes()),
+        &_ => return Err(anyhow::anyhow!("Invalid code_base argument")),
+    };
+    // Define the name command line option
 
     let mut all_hashmaps_vec: Vec<HashMap<String, i32>> = Vec::new();
 
@@ -43,10 +63,6 @@ fn main() -> Result<()> {
         let sub_dir = sub_dir.expect("Could not read subdirectory");
         let sub_dir_path = sub_dir.path();
 
-        // For now let's avoid Ada
-        if sub_dir_path.to_string_lossy().contains("ada") {
-            continue;
-        }
         process_directory(
             &sub_dir_path,
             &regexes,
@@ -145,16 +161,18 @@ fn count_in_file(
 
 fn create_key(regex: &Regex) -> String {
     let key = match regex.as_str() {
-        "\\[.*;.*\\]" => "Array".to_string(),
+        "\\[.*;.*\\]" | "is array" => "Array".to_string(),
         "Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>" => "Box/Rc/Arc".to_string(),
-        "&[mut\\s]*\\w+" => "&T or &mut T".to_string(),
+        "&[mut\\s]*\\w+" | r"type\s{1}[a-zA-Z_]+\s{1}is\s{1}array" => "&T or &mut T".to_string(),
         "String::|.to_string|format!\\(" => "String".to_string(),
         "(vec!\\[\\])|(Vec<)|Vec::n" => "Vec".to_string(),
         "\\b\\d+\\b" => "Number".to_string(),
         "struct" => "Struct".to_string(),
-        "enum" => "Enum".to_string(),
+        "enum" | r"type\s{1}[a-zA-Z_]+\s{1}is\s{1}\(" => "Enum".to_string(),
+        "record" => "Record".to_string(),
+        r"\b(access)\s+(\w+)\b" => "Access".to_string(),
         // this is a kind of error I guess
-        _ => String::from("Not a regex"),
+        _ => String::from("Not a valid regex"),
     };
     key
 }

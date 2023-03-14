@@ -3,7 +3,6 @@ import pandas as pd
 import plotly.express as px
 import seaborn as sns
 
-
 # plot coming from article
 # https://towardsdatascience.com/9-visualizations-to-show-proportions-or-percentages-instead-of-a-pie-chart-4e8d81617451
 # Data types and data structures used in the Rust compiler
@@ -131,11 +130,11 @@ for d in datasets:
 
     fig.update_traces(
         textposition="top center",
-        textfont=dict(size=14, color="#333333"),
+        textfont=dict(size=16, color="#333333"),
     )
     fig.update_xaxes(showgrid=False, zeroline=False, visible=False)
     fig.update_yaxes(showgrid=False, zeroline=False, visible=False)
     fig.update_layout({"plot_bgcolor": "white", "paper_bgcolor": "white"})
-    fig.write_image(f"{dict_name}.png", format="png")
-    # plt.savefig("librs.png", dpi=300, bbox_inches="tight")
+    fig.write_image(f"{dict_name}.svg", format="png")
+
     fig.show()
