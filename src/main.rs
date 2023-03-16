@@ -46,6 +46,8 @@ fn main() -> Result<()> {
 
     let args = Args::parse();
     let code_base = args.code_base;
+    let mut grand_total_files: i32 = 0;
+    let mut grand_total_loc: i32 = 0;
 
     let (path, regexes): (&Path, Vec<Regex>) = match &code_base {
         p if p == "rust" => (Path::new("../famous_crates/rust"), rust_regexes()),
@@ -69,6 +71,8 @@ fn main() -> Result<()> {
             &mut results,
             &mut total_line_counter,
             &mut total_number_of_files,
+            &mut grand_total_loc,
+            &mut grand_total_files,
         )
         .unwrap_or_else(|err| {
             eprintln!(
@@ -78,18 +82,12 @@ fn main() -> Result<()> {
             );
         });
 
-        println!("Dir : {:#?} : {results:#?}", &sub_dir_path.display());
-
-        let total: i32 = results.values().sum();
-        println!("Number of total occurences : {total}");
-        for (k, v) in &results {
-            println!(
-                "key : {k}, value : {v}, percentage {:.4}",
-                (*v as f64 / total as f64)
-            );
-        }
-        println!("Total LOC : {total_line_counter}");
-        println!("Total number of files : {total_number_of_files}\n\n");
+        print_stat(
+            sub_dir_path,
+            &results,
+            total_number_of_files,
+            total_line_counter,
+        );
 
         all_hashmaps_vec.push(results);
     }
@@ -104,9 +102,32 @@ fn main() -> Result<()> {
         }
     }
 
-    println!("Final result: {final_hashmap:?}");
+    //println!("Final result: {final_hashmap:?}");
+    //println!("Grand total LOC : {grand_total_files}");
+    //println!("Total number of files : {grand_total_LOC}\n\n");
+    print_stat(
+        path.to_path_buf(),
+        &final_hashmap,
+        grand_total_files,
+        grand_total_loc,
+    );
 
     Ok(())
+}
+
+fn print_stat(sub_dir_path: PathBuf, results: &HashMap<String, i32>, files: i32, lines: i32) {
+    println!("Dir : {:#?} : {results:#?}", &sub_dir_path.display());
+
+    let total: i32 = results.values().sum();
+    println!("Total number of types : {total}");
+    for (k, v) in results {
+        println!(
+            "key : {k}, value : {v}, percentage {:.4}",
+            (*v as f64 / total as f64)
+        );
+    }
+    println!("Total LOC : {lines}");
+    println!("Total number of files : {files}\n\n");
 }
 
 fn process_directory(
@@ -115,6 +136,8 @@ fn process_directory(
     results: &mut HashMap<String, i32>,
     total_line_counter: &mut i32,
     total_number_of_files: &mut i32,
+    grand_total_files: &mut i32,
+    grand_total_loc: &mut i32,
 ) -> Result<(), anyhow::Error> {
     for entry in fs::read_dir(path)? {
         let entry = entry?;
@@ -123,8 +146,9 @@ fn process_directory(
 
         if path.is_file() {
             *total_number_of_files += 1;
+            *grand_total_files += 1;
             for r in regexes {
-                count_in_file(&path, r, results, total_line_counter);
+                count_in_file(&path, r, results, total_line_counter, grand_total_loc);
             }
         } else if path.is_dir() {
             process_directory(
@@ -133,6 +157,8 @@ fn process_directory(
                 results,
                 total_line_counter,
                 total_number_of_files,
+                grand_total_files,
+                grand_total_loc,
             )?;
         }
     }
@@ -144,11 +170,13 @@ fn count_in_file(
     regex: &Regex,
     results: &mut HashMap<String, i32>,
     total_line_counter: &mut i32,
+    grand_total_loc: &mut i32,
 ) {
     let file = File::open(path).expect("Could not open file");
     let reader = BufReader::new(file);
     reader.lines().flatten().for_each(|line| {
         *total_line_counter += 1;
+        *grand_total_loc += 1;
         if regex.is_match(&line) {
             let key = create_key(regex);
             match results.get(&key) {
@@ -175,6 +203,7 @@ fn create_key(regex: &Regex) -> String {
         "is record" => "Record".to_string(),
         r"access|new" => "Access".to_string(),
         r#"range <>|Containers.Vector"# => "Unconstrained array".to_string(),
+        "Strings.Unbounded" => "Unbounded strings".to_string(),
         // this is a kind of error I guess
         els => format!("Not a valid regex {els}"),
     };

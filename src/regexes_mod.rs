@@ -34,8 +34,7 @@ pub fn spark_regexes() -> Vec<Regex> {
     // new is used for memory allocation but access is sufficient
     let ref_regex = Regex::new(r"access|new").unwrap();
     let unconstrained_regex = Regex::new(r#"range <>|Containers.Vector"#).unwrap();
-    // Counts of the unsafe keyword can be useful later.
-    //let unsafe_regex: Regex = Regex::new(r"unsafe \{").unwrap();
+    let unbounded_regex: Regex = Regex::new(r"Strings.Unbounded").unwrap();
     vec![
         number_regex,
         struct_regex,
@@ -43,5 +42,6 @@ pub fn spark_regexes() -> Vec<Regex> {
         array_regex,
         ref_regex,
         unconstrained_regex,
+        unbounded_regex,
     ]
 }
