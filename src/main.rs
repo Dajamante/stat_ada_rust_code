@@ -24,6 +24,7 @@ use clap::{arg, command, Parser};
 use log::info;
 use regex::Regex;
 use std::collections::HashMap;
+use std::fmt::Debug;
 use std::fs::{self, File};
 use std::io::BufRead;
 use std::io::BufReader;
@@ -40,6 +41,30 @@ struct Args {
     code_base: String,
 }
 
+trait StatPrinter {
+    fn print(&self);
+}
+
+impl StatPrinter for HashMap<String, i32> {
+    fn print(&self) {
+        let total: i32 = self.values().sum();
+        println!("Total number of types : {total}");
+        for (k, v) in self {
+            println!(
+                "key : {k}, value : {v}, percentage {:.4}",
+                (*v as f64 / total as f64)
+            );
+        }
+    }
+}
+
+impl StatPrinter for HashMap<String, HashMap<String, i32>> {
+    fn print(&self) {
+        for v in self.values() {
+            v.print();
+        }
+    }
+}
 fn main() -> Result<()> {
     env_logger::init();
     info!("Starting application");
@@ -56,8 +81,7 @@ fn main() -> Result<()> {
     };
     // Define the name command line option
 
-    let mut all_hashmaps_vec: Vec<HashMap<String, i32>> = Vec::new();
-
+    let mut all_hashmaps: HashMap<String, HashMap<String, i32>> = HashMap::new();
     for sub_dir in path.read_dir().expect("Could not access the famous dir") {
         let mut results: HashMap<String, i32> = HashMap::new();
         let mut total_line_counter = 0;
@@ -83,49 +107,48 @@ fn main() -> Result<()> {
         });
 
         print_stat(
-            sub_dir_path,
+            &sub_dir_path,
             &results,
             total_number_of_files,
             total_line_counter,
         );
 
-        all_hashmaps_vec.push(results);
+        all_hashmaps.insert(
+            sub_dir_path
+                .file_name()
+                .unwrap()
+                .to_string_lossy()
+                .into_owned(),
+            results,
+        );
     }
 
-    let mut final_hashmap = HashMap::new();
-    for hm in all_hashmaps_vec {
+    let mut final_hashmap: HashMap<String, i32> = HashMap::new();
+    for hm in all_hashmaps.values() {
         for (k, v) in hm {
-            match final_hashmap.get(&k) {
-                Some(count) => final_hashmap.insert(k, v + count),
-                None => final_hashmap.insert(k, v),
+            match final_hashmap.get(k) {
+                Some(count) => final_hashmap.insert(k.to_string(), v + count),
+                None => final_hashmap.insert(k.to_string(), *v),
             };
         }
     }
-
-    //println!("Final result: {final_hashmap:?}");
-    //println!("Grand total LOC : {grand_total_files}");
-    //println!("Total number of files : {grand_total_LOC}\n\n");
-    print_stat(
-        path.to_path_buf(),
-        &final_hashmap,
-        grand_total_files,
-        grand_total_loc,
-    );
+    print_latex_output(&all_hashmaps);
+    println!("Final result: {final_hashmap:?}");
+    println!("Grand total LOC : {grand_total_files}");
+    println!("Total number of files : {grand_total_loc}\n\n");
+    print_stat(path, &final_hashmap, grand_total_files, grand_total_loc);
 
     Ok(())
 }
 
-fn print_stat(sub_dir_path: PathBuf, results: &HashMap<String, i32>, files: i32, lines: i32) {
-    println!("Dir : {:#?} : {results:#?}", &sub_dir_path.display());
+fn print_stat<T: StatPrinter + std::fmt::Debug>(
+    sub_dir_path: &Path,
+    results: &T,
+    files: i32,
+    lines: i32,
+) {
+    println!("Dir : {:#?} : {:#?}", &sub_dir_path.display(), results);
 
-    let total: i32 = results.values().sum();
-    println!("Total number of types : {total}");
-    for (k, v) in results {
-        println!(
-            "key : {k}, value : {v}, percentage {:.4}",
-            (*v as f64 / total as f64)
-        );
-    }
     println!("Total LOC : {lines}");
     println!("Total number of files : {files}\n\n");
 }
@@ -208,4 +231,38 @@ fn create_key(regex: &Regex) -> String {
         els => format!("Not a valid regex {els}"),
     };
     key
+}
+
+fn print_latex_output(all_hashmaps: &HashMap<String, HashMap<String, i32>>) {
+    println!(r"\pgfplotstableread{{");
+    println!("Rust_type crates_io lib_rs rustc");
+
+    let rust_types = [
+        "Number",
+        "&T or &mut T",
+        "Array",
+        "Vec",
+        "Enum",
+        "Struct",
+        "String",
+    ];
+
+    for rt in &rust_types {
+        print!("{} ", rt);
+        let mut sorted_dirs: Vec<_> = all_hashmaps.keys().collect();
+        sorted_dirs.sort();
+        for dir in all_hashmaps.keys() {
+            let count = match dir.as_str() {
+                "rustc" | "cratesio" | "librs" => all_hashmaps
+                    .get(dir)
+                    .and_then(|hm| hm.get(*rt))
+                    .unwrap_or(&0),
+                _ => continue,
+            };
+            print!(" {}", count);
+        }
+        println!();
+    }
+
+    println!("}}\\EXPDATA");
 }
