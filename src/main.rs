@@ -148,7 +148,8 @@ fn print_stat<T: StatPrinter + std::fmt::Debug>(
     lines: i32,
 ) {
     println!("Dir : {:#?} : {:#?}", &sub_dir_path.display(), results);
-
+    println!("CALLING STAT PRINTER:");
+    results.print();
     println!("Total LOC : {lines}");
     println!("Total number of files : {files}\n\n");
 }
@@ -246,6 +247,10 @@ fn print_latex_output(all_hashmaps: &HashMap<String, HashMap<String, i32>>) {
         "Struct",
         "String",
     ];
+    let mut dir_totals: HashMap<String, i32> = HashMap::new();
+    for (dir, hm) in all_hashmaps {
+        dir_totals.insert(dir.clone(), hm.values().sum());
+    }
 
     for rt in &rust_types {
         print!("{} ", rt);
@@ -259,7 +264,10 @@ fn print_latex_output(all_hashmaps: &HashMap<String, HashMap<String, i32>>) {
                     .unwrap_or(&0),
                 _ => continue,
             };
-            print!(" {}", count);
+
+            let total = dir_totals.get(dir).unwrap_or(&0);
+            let percentage = (*count as f64 / *total as f64) * 100.0;
+            print!(" {} ({:.2}%)", count, percentage);
         }
         println!();
     }
