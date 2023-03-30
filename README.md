@@ -36,3 +36,52 @@ Once the program finishes running, it will print out a bunch of statistics to th
 }
 ```
 
+## Scripts
+
+### Git hash script
+
+Structure of the directory:
+
+```
+rust$ tree -L 2
+.
+├── cratesio
+│   ├── cfg-if
+│   ├── libc
+│   ├── proc-macro2
+│   ├── quote
+│   ├── rand
+│   └── syn
+├── librs
+│   ├── clap
+│   ├── json
+│   ├── log
+│   ├── serde
+│   ├── thiserror
+│   └── tokio
+├── log.sh
+└── rustc
+    ├── Cargo.lock
+    ├── compiler
+    ├── CONTRIBUTING.md
+    ├── COPYRIGHT
+    ├── README.md
+    └── x.py
+```
+
+Script that iterates through the sub directories and get the git hash. This example is for Rust.
+```
+#!/bin/bash
+
+# Three sub repos in rust/ repo
+for dir in $(find . -maxdepth 3 -name '.git' -type d -printf '%h\n'); do
+    cd "$dir" || continue
+    last_commit=$(git rev-parse --short=7 HEAD)
+    echo "$dir: $last_commit"
+    # Print only the last line relevant to me
+    rust_lines=$(cloc . | grep "Rust" | awk '{print $NF}')    
+    echo "Rust lines: $rust_lines"
+    cd - > /dev/null || continue
+done
+
+```

@@ -19,6 +19,8 @@
 ///  from all hashmaps and creates a final hashmap with the total
 ///  counts for each pattern. Finally, the program prints out the final
 /// hashmap to the console.
+///
+/// Call it with `cargo run -- --code-base rust/ada
 use anyhow::Result;
 use clap::{arg, command, Parser};
 use log::info;
