@@ -1,9 +1,9 @@
 use regex::Regex;
 pub fn rust_regexes() -> Vec<Regex> {
-    let number_regex = Regex::new(r#"\b\d+\b"#).unwrap();
+    let number_regex = Regex::new(r#"\b(?:\d+(?:\.\d+)?|\d+(?:_\d+)+)\b"#).unwrap();
     let struct_regex = Regex::new(r"struct").unwrap();
     let enum_regex = Regex::new(r"enum").unwrap();
-    let array_regex = Regex::new(r"\[.*;.*\]").unwrap();
+    let array_regex = Regex::new(r#"\[(\s*\d+\s*(?:,\s*\d+\s*)*)\]"#).unwrap();
     let ref_regex = Regex::new(r"&[mut\s]*\w+").unwrap();
     let heap_regex: Regex = Regex::new(r"Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>").unwrap();
     // Counts of the unsafe keyword can be useful later.
