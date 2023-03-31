@@ -90,7 +90,7 @@ done
 
 ### Rust regexes
 
-#### Numbers: 
+#### Numbers
 ```rust
 r#"\b(?:\d+(?:\.\d+)?|\d+(?:_\d+)+)\b"#
 ```
@@ -107,8 +107,9 @@ let c = 3.14;
 let d:f32;
 ```
 #### enum and struct
+`"struct"` and `"enum"`
 
-A very simple regex matching declaration of enums and structs.
+Two very simple regex matching declaration of enums and structs.
 
 ```rust
 struct Point {
@@ -119,8 +120,6 @@ enum Color {
     //...
 }
 ```
-  
-
 
 #### array: 
 
@@ -160,6 +159,8 @@ let arc_value: Arc<Vec<u8>> = Arc::new(vec![1, 2, 3]);
 
 #### Dynamic vectors
 
+`vec!|Vec::new`
+
 This regex matches dynamic `Vec` types and the `vec![]` macro in Rust.
 
 ```rust
@@ -169,9 +170,10 @@ let w: Vec<i32> = Vec::new();
 
 #### String
 
+`String::|.to_string|format!`
+
 This pattern matches instances where a String is created or manipulated in Rust. Usually with a method `.to_string()`, `String::new()` or the `format!` macro.
 
-String::: This part of the regex pattern matches any method or associated function called on the String type. Examples include `String::new()` and `String::from("...")` or `...to_string()`. The pattern searches for the "String::" substring in the code.
 
 ```rust
 et name = ”Yacouba”;
@@ -180,8 +182,8 @@ let formatted = format!(”{} is {} years old”, name, age);
 ```
 ### SPARK regexes
 
-
 #### Number
+  
 
 `Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d`
 
@@ -198,6 +200,8 @@ type Float is digits 6;
 
 #### struct
 
+`is record`
+
 This regex matches record types in Ada, which are similar to structs in other languages. The pattern is record looks for the "is record" 
 
 ```ada
@@ -208,6 +212,8 @@ end record;
 ```
 
 #### enum
+
+`type\s{1}[a-zA-Z_]+\s{1}is\s{1}\(`
 
 This regex matches enumeration types in Ada.
 This pattern looks for a type, a name, the word is and an immediate parenthesis.
@@ -228,6 +234,8 @@ type Int_Array is array (1 .. 10) of Integer;
 
 #### Dynamic vectors
 
+`range <>|Containers.Vector`
+
 This regex matches unconstrained arrays in Ada, specifically those using range <> or the Containers.Vector package.
 
 ```ada
@@ -240,6 +248,8 @@ The pattern range <>|Containers.Vector looks for either the "range <>" substring
 
 #### References regex
 
+`access|new`
+
 This pattern looks memory allocation and access in Ada. It looks either for "access" (for access types, the Ada/SPARK pointers) or "new" (for memory allocation).
 
 ```ada
@@ -249,6 +259,8 @@ Ptr : Int_Ptr := X'Access;
 ```
 
 #### Unbounded strings.
+
+`Strings.Unbounded`
 
 This regex matches unbounded strings in Ada.
 
