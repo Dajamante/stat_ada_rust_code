@@ -85,3 +85,178 @@ for dir in $(find . -maxdepth 3 -name '.git' -type d -printf '%h\n'); do
 done
 
 ```
+
+## Regexes used
+
+### Rust regexes
+
+#### Numbers: 
+```rust
+r#"\b(?:\d+(?:\.\d+)?|\d+(?:_\d+)+)\b"#
+```
+This regex matches integers and floats, as well as numbers with underscore since it is allowed by Rust. Because it is fenced by boundaries, it should not match type declarations, or numbers inside a struct (please see next regex for enum and struct).
+
+It will match the any number.
+
+```rust
+//match
+let a = 5;
+let b = 10_000;
+let c = 3.14;
+//not match
+let d:f32;
+```
+#### enum and struct
+
+A very simple regex matching declaration of enums and structs.
+
+```rust
+struct Point {
+    x: f32,
+    y: f32,
+}
+enum Color {
+    //...
+}
+```
+  
+
+
+#### array: 
+
+`r#"\[(\s*\d+\s*(?:,\s*\d+\s*)*)\]"#`
+
+This regex matches array literals, but not their declaration.
+
+The rationale is that more often then not the compiler does not need the declaration and can figure out the type. But in case we have the declaration, we don't want to match twice.
+
+```rust
+// matches array, but not [i32;5]
+let a : [i32; 5] = [1, 2, 3, 4, 5];
+```
+
+#### References
+
+`r"&[mut\s]*\w+"`
+
+This regex matches reference types in Rust, including mutable and immutable references.
+
+```rust
+let x = &x;
+let y = &mut x;
+```
+
+#### Heap types
+
+`"Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>")`
+
+This regex matches the declaration of Rust heap-allocated types, specifically Box, Rc, and Arc, followed by `<`.
+
+```rust
+let boxed_value: Box<i32> = Box::new(5);
+let rc_value: Rc<String> = Rc::new(String::from("Hello"));
+let arc_value: Arc<Vec<u8>> = Arc::new(vec![1, 2, 3]);
+```
+
+#### Dynamic vectors
+
+This regex matches dynamic `Vec` types and the `vec![]` macro in Rust.
+
+```rust
+let v = vec![1, 2, 3];
+let w: Vec<i32> = Vec::new();
+```
+
+#### String
+
+This pattern matches instances where a String is created or manipulated in Rust. Usually with a method `.to_string()`, `String::new()` or the `format!` macro.
+
+String::: This part of the regex pattern matches any method or associated function called on the String type. Examples include `String::new()` and `String::from("...")` or `...to_string()`. The pattern searches for the "String::" substring in the code.
+
+```rust
+et name = ”Yacouba”;
+let age = 12;
+let formatted = format!(”{} is {} years old”, name, age);
+```
+### SPARK regexes
+
+
+#### Number
+
+`Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d`
+
+Ada/SPARK is stricter than Rust in the declarations, and requires a type declaration. This pattern match the possible numeric types.
+
+This pattern matches for example:
+
+```Ada
+type Integer is range -2_147_483_648 .. 2_147_483_647;
+type Positive is range 1 .. Integer'Last;
+type Float is digits 6;
+```
+
+
+#### struct
+
+This regex matches record types in Ada, which are similar to structs in other languages. The pattern is record looks for the "is record" 
+
+```ada
+type Point is record
+    X : Integer;
+    Y : Integer;
+end record;
+```
+
+#### enum
+
+This regex matches enumeration types in Ada.
+This pattern looks for a type, a name, the word is and an immediate parenthesis.
+
+```ada
+type Color is (Red, Green, Blue);
+```
+#### arrays
+
+`type [a-zA-Z_]+ is array\(\d.."`
+This regex matches array declarations in Ada. In the same manner, it combines keywords type, is and array, opening parenthesis and a numeric type, to not match on Dynamic vectors.
+
+Example:
+
+```ada
+type Int_Array is array (1 .. 10) of Integer;
+```
+
+#### Dynamic vectors
+
+This regex matches unconstrained arrays in Ada, specifically those using range <> or the Containers.Vector package.
+
+```ada
+type Int_Vector is array (Integer range <>) of Integer;
+package Int_Vectors is new Containers.Vectors (Index_Type => Integer, Element_Type => Integer);
+```
+
+
+The pattern range <>|Containers.Vector looks for either the "range <>" substring, which represents an unconstrained array index, or the "Containers.Vector" substring, which is used for instantiating the Containers.Vectors generic package.
+
+#### References regex
+
+This pattern looks memory allocation and access in Ada. It looks either for "access" (for access types, the Ada/SPARK pointers) or "new" (for memory allocation).
+
+```ada
+type Int_Ptr is access Integer;
+X : aliased Integer := 42;
+Ptr : Int_Ptr := X'Access;
+```
+
+#### Unbounded strings.
+
+This regex matches unbounded strings in Ada.
+
+```ada
+use Ada.Strings.Unbounded;
+S : Unbounded_String := To_Unbounded_String("Hello, world!");
+```
+
+
+The pattern Strings.Unbounded looks for the "Strings.Unbounded" substring, which indicates the use of the Ada.Strings.Unbounded package and its Unbounded_String type.
+

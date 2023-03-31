@@ -9,7 +9,7 @@ pub fn rust_regexes() -> Vec<Regex> {
     // Counts of the unsafe keyword can be useful later.
     //let unsafe_regex: Regex = Regex::new(r"unsafe \{").unwrap();
 
-    let dyn_vec_regex = Regex::new(r"(vec!\[\])|(Vec<)|Vec::n").unwrap();
+    let dyn_vec_regex = Regex::new(r"vec!|Vec::n").unwrap();
     let string_regex = Regex::new(r"String::|.to_string|format!\(").unwrap();
     vec![
         number_regex,
