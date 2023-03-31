@@ -215,12 +215,14 @@ fn count_in_file(
 
 fn create_key(regex: &Regex) -> String {
     let key = match regex.as_str() {
-        "\\[.*;.*\\]" | r#"type [a-zA-Z_]+ is array\(\d.."# => "Array".to_string(),
+        r#"\[(\s*\d+\s*(?:,\s*\d+\s*)*)\]"# | r#"type [a-zA-Z_]+ is array\(\d.."# => {
+            "Array".to_string()
+        }
         "Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>" => "Box/Rc/Arc".to_string(),
         "&[mut\\s]*\\w+" | r"type\s{1}[a-zA-Z_]+\s{1}is\s{1}array" => "&T or &mut T".to_string(),
         "String::|.to_string|format!\\(" => "String".to_string(),
-        "(vec!\\[\\])|(Vec<)|Vec::n" => "Vec".to_string(),
-        "\\b\\d+\\b"
+        "vec!|Vec::n" => "Vec".to_string(),
+        r#"\b(?:\d+(?:\.\d+)?|\d+(?:_\d+)+)\b"#
         | r#"Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d"# => {
             "Number".to_string()
         }
