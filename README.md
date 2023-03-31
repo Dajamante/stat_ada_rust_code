@@ -92,7 +92,7 @@ done
 
 #### Numbers
 ```rust
-r#"\b(?:\d+(?:\.\d+)?|\d+(?:_\d+)+)\b"#
+`\b(?:\d+(?:\.\d+)?|\d+(?:_\d+)+)\b`
 ```
 This regex matches integers and floats, as well as numbers with underscore since it is allowed by Rust. Because it is fenced by boundaries, it should not match type declarations, or numbers inside a struct (please see next regex for enum and struct).
 
@@ -123,7 +123,7 @@ enum Color {
 
 #### array: 
 
-`r#"\[(\s*\d+\s*(?:,\s*\d+\s*)*)\]"#`
+`"\[(\s*\d+\s*(?:,\s*\d+\s*)*)\]"`
 
 This regex matches array literals, but not their declaration.
 
@@ -136,7 +136,7 @@ let a : [i32; 5] = [1, 2, 3, 4, 5];
 
 #### References
 
-`r"&[mut\s]*\w+"`
+`"&[mut\s]*\w+"`
 
 This regex matches reference types in Rust, including mutable and immutable references.
 
@@ -147,7 +147,7 @@ let y = &mut x;
 
 #### Heap types
 
-`"Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>")`
+`"Box<[^<>]+>|Rc<[^<>]+>|Arc<[^<>]+>"`
 
 This regex matches the declaration of Rust heap-allocated types, specifically Box, Rc, and Arc, followed by `<`.
 
@@ -265,7 +265,6 @@ Ptr : Int_Ptr := X'Access;
 This regex matches unbounded strings in Ada.
 
 ```ada
-use Ada.Strings.Unbounded;
 S : Unbounded_String := To_Unbounded_String("Hello, world!");
 ```
 
