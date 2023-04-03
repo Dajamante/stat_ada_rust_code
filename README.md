@@ -141,7 +141,7 @@ let a : [i32; 5] = [1, 2, 3, 4, 5];
 This regex matches reference types in Rust, including mutable and immutable references.
 
 ```rust
-let x = &x;
+let mut x: i32 = 72;
 let y = &mut x;
 ```
 
@@ -176,7 +176,7 @@ This pattern matches instances where a String is created or manipulated in Rust.
 
 
 ```rust
-et name = ”Yacouba”;
+let name = ”Yacouba”;
 let age = 12;
 let formatted = format!(”{} is {} years old”, name, age);
 ```
@@ -184,19 +184,32 @@ let formatted = format!(”{} is {} years old”, name, age);
 
 #### Number
   
+`(:(\\s*)(Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|Short))|(range(\\s*)(-)?\\d+)|(is(\\s*)digits)`
+  
 
-`Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d`
-
-Ada/SPARK is stricter than Rust in the declarations, and requires a type declaration. This pattern match the possible numeric types.
+Ada/SPARK is stricter than Rust in the declarations, and requires a type declaration. This pattern match the possible numeric types, but not arrays.
 
 This pattern matches for example:
 
 ```Ada
-type Integer is range -2_147_483_648 .. 2_147_483_647;
-type Positive is range 1 .. Integer'Last;
-type Float is digits 6;
+-- predefined types
+X : Integer := 42;
+Y : Float := 3.14;
+Z : Long_Float := -1.23E-4;
+A : Short_Integer := 5;
+B : Long_Integer := -100000;
+
+-- custom declarations
+type My_Integer is range -100 .. 100;
+type My_Float is digits 6 range 1.0E-6 .. 1.0E6;
 ```
 
+But will not match:
+```Ada
+type Integer_Array is array (1 .. 5) of Integer;
+type Float_Array is array (Natural range <>) of Float;
+type Long_Float_Matrix is array (Positive range <>, Positive range <>) of Long_Float;
+```
 
 #### struct
 

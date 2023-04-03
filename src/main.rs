@@ -223,7 +223,7 @@ fn create_key(regex: &Regex) -> String {
         "String::|.to_string|format!\\(" => "String".to_string(),
         "vec!|Vec::n" => "Vec".to_string(),
         r#"\b(?:\d+(?:\.\d+)?|\d+(?:_\d+)+)\b"#
-        | r#"Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d"# => {
+        | "(:(\\s*)(Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|Short))|(range(\\s*)(-)?\\d+)|(is(\\s*)digits)" => {
             "Number".to_string()
         }
         "struct" => "Struct".to_string(),

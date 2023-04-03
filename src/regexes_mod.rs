@@ -25,9 +25,7 @@ pub fn rust_regexes() -> Vec<Regex> {
 
 pub fn spark_regexes() -> Vec<Regex> {
     //let number_regex = Regex::new(r#"\b\d+\b"#).unwrap();
-    let number_regex =
-        Regex::new(r#"Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|range \d .. \d"#)
-            .unwrap();
+    let number_regex = Regex::new("(:(\\s*)(Integer|Float|Fixed|Decimal|Modular|Natural|Positive|Long|Short))|(range(\\s*)(-)?\\d+)|(is(\\s*)digits)").unwrap();
     let struct_regex = Regex::new("is record").unwrap();
     let enum_regex = Regex::new(r#"type\s{1}[a-zA-Z_]+\s{1}is\s{1}\("#).unwrap();
     let array_regex = Regex::new(r#"type [a-zA-Z_]+ is array\(\d.."#).unwrap();
